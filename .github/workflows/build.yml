@@ -16,13 +16,16 @@ jobs:
           update: true
           msystem: MINGW64
           install: >-
+            git
+            flex
+            bison
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-meson
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-pkgconf
-            git
-            flex
-            bison
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-zlib
 
       - name: Clone nunuhara/elf-tools (fix submodule URL to HTTPS)
         shell: msys2 {0}
@@ -53,7 +56,7 @@ jobs:
           cp elf-tools/build/elf.exe out/
           cp elf-tools/README.md out/
           cd out
-          # 生成带 commit 短哈希的文件名
+          # 带 commit 短哈希命名
           COMMIT=$(git -C ../elf-tools rev-parse --short HEAD)
           mv elf.exe "elf_${COMMIT}.exe"
           # 生成 SHA256 校验
