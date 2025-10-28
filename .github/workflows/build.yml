@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - name: Install MSYS2
         uses: msys2/setup-msys2@v2
@@ -19,26 +20,32 @@ jobs:
             mingw-w64-x86_64-meson
             mingw-w64-x86_64-ninja
             mingw-w64-x86_64-pkgconf
-            mingw-w64-x86_64-flex
-            mingw-w64-x86_64-bison
             git
+            flex
+            bison
 
       - name: Clone nunuhara/elf-tools
         shell: msys2 {0}
         run: |
+          set -e
           git clone https://github.com/nunuhara/elf-tools.git
           cd elf-tools
           meson setup build --buildtype=release
           ninja -C build
 
-      - name: Pack artifact
+      - name: Pack artifact (exe + README + SHA256)
         shell: bash
         run: |
+          set -e
           mkdir -p out
           cp elf-tools/build/elf.exe out/
           cp elf-tools/README.md out/
           cd out
-          sha256sum elf.exe > SHA256.txt
+          # 带短 commit 号重命名
+          COMMIT=$(git -C ../elf-tools rev-parse --short HEAD)
+          mv elf.exe "elf_${COMMIT}.exe"
+          # 生成 SHA256
+          certutil -hashfile "elf_${COMMIT}.exe" SHA256 > SHA256.txt 2>&1 || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
