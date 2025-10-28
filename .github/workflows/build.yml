@@ -24,12 +24,14 @@ jobs:
             flex
             bison
 
-      - name: Clone nunuhara/elf-tools
+      - name: Clone nunuhara/elf-tools (with submodules)
         shell: msys2 {0}
         run: |
           set -e
-          git clone https://github.com/nunuhara/elf-tools.git
+          git clone --recurse-submodules https://github.com/nunuhara/elf-tools.git
           cd elf-tools
+          # 保险起见再同步一次（可选）
+          git submodule update --init --recursive
           meson setup build --buildtype=release
           ninja -C build
 
