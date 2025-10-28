@@ -24,14 +24,24 @@ jobs:
             flex
             bison
 
+      # 关键：在克隆 elf-tools 之前设置 Git 全局重写（SSH -> HTTPS）
+      - name: Force submodules to use HTTPS
+        shell: msys2 {0}
+        run: |
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+
       - name: Clone nunuhara/elf-tools (with submodules)
         shell: msys2 {0}
         run: |
           set -e
           git clone --recurse-submodules https://github.com/nunuhara/elf-tools.git
           cd elf-tools
-          # 保险起见再同步一次（可选）
+          # 保险起见，显式同步并再次确保 .gitmodules 改为 HTTPS
+          sed -i 's#git@github.com:#https://github.com/#g' .gitmodules || true
+          git submodule sync --recursive
           git submodule update --init --recursive
+
           meson setup build --buildtype=release
           ninja -C build
 
@@ -43,10 +53,8 @@ jobs:
           cp elf-tools/build/elf.exe out/
           cp elf-tools/README.md out/
           cd out
-          # 带短 commit 号重命名
           COMMIT=$(git -C ../elf-tools rev-parse --short HEAD)
           mv elf.exe "elf_${COMMIT}.exe"
-          # 生成 SHA256
           certutil -hashfile "elf_${COMMIT}.exe" SHA256 > SHA256.txt 2>&1 || true
 
       - name: Upload artifact
